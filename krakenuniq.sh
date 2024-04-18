@@ -1,14 +1,31 @@
 #!/bin/bash -eux
 
-# Arguments:
-# ID           : sample name
-# QRY[1 QRY2]  : read file(s)
-# OUT          : output prefix
+##################################################################
 
-######################
+if [ "$#" -ne 3 ] && [ "$#" -ne 4 ] ; then
+cat << EOF
+   SCRIPT WHICH RUNS `basename $0 .sh`
 
-test -n $DB
+   ARGUMENTS:
+    ID           : sample name/id
+    QRY[1 QRY2]  : read file(s)
+    OUT          : output prefix
+
+  SETUP ENVIRONMENT (once)
+    . ./init.sh
+
+  USAGE:
+    $0 ID QRY       OUT
+    $0 ID QRY1 QRY2 OUT
+EOF
+exit 0
+fi
+
+
+##################################################################
+
 test -d $KRAKENDB
+test -d $BRAKENDB
 test -n $P
 
 if [ "$#" -eq 3 ] ; then
@@ -18,7 +35,9 @@ if [ "$#" -eq 3 ] ; then
   test -s $QRY
   mkdir -p `dirname $OUT`
 
-  krakenuniq --db $KRAKENDB --threads $P --report $OUT.report $QRY > $OUT.out
+  if [ ! -s $OUT.kraken ] ; then
+    krakenuniq --db $KRAKENDB --threads $P --report $OUT.kreport $QRY > $OUT.kraken
+  fi
 elif [ "$#" -eq 4 ] ; then
   export ID=$1
   QRY1=$2
@@ -28,11 +47,12 @@ elif [ "$#" -eq 4 ] ; then
   test -s $QRY2
   mkdir -p `dirname $OUT`
 
-  krakenuniq --db $KRAKENDB --threads $P --report $OUT.report $QRY1 $QRY2 > $OUT.out
-else
-  echo "Incorrect number of parameters"
-  echo "Usage:"
-  echo "  $0 SAMPLE_ID QRY_SEQ_FILE                OUT_PREFIX"
-  echo "  $0 SAMPLE_ID QRY_SEQ_FILE1 QRY_SEQ_FILE2 OUT_PREFIX"
-  exit 1
+  if [ ! -s ${OUT}.kraken ] ; then
+    krakenuniq --db $KRAKENDB --threads $P --report ${OUT}.kreport --paired $QRY1 $QRY2 > $OUT.kraken
+  fi
+fi
+
+if [ ! -s $OUT.bracken ] ; then
+  bracken -d $BRAKENDB -i $OUT.kreport -o $OUT.bracken -l P -t $P -w $OUT.breport
+  cat $OUT.bracken | sed 's| |__|g' | tee >(head -n 1) >(tail -n +2|sort -k7,7nr) >/dev/null| sed 's|__| |g' | cat > $OUT.bracken.srt ; mv $OUT.bracken.srt $OUT.bracken
 fi

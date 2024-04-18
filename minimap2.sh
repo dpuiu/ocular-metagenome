@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+#!/bin/bash -eux
 
 ##################################################################
 
@@ -22,11 +22,10 @@ exit 0
 fi
 
 ##################################################################
-
 test -n $REF1
 test -n $REF2
-test -s $REF1.1.bt2
-test -s $REF2.1.bt2
+test -s $REF1.mmi
+test -s $REF2.mmi
 test -n $P
 
 if [ "$#" -eq 3 ] ; then
@@ -37,10 +36,10 @@ if [ "$#" -eq 3 ] ; then
   mkdir -p `dirname $OUT`
 
   if [ ! -f $OUT.unmapped.fasta ] ; then
-      bowtie2 --very-sensitive $BOWTIE2FLAGS $QRY -x $REF1 -p $P --rg "ID:$ID" --rg "SM:$ID" --rg-id $ID 2>$OUT.log | \
-        samtools view -f 0x4 -bu - | samtools fasta | \
-        bowtie2 --very-sensitive $BOWTIE2FLAGS /dev/stdin -x $REF2 -p $P --rg "ID:$ID" --rg "SM:$ID" --rg-id $ID  2>>$OUT.log | \
-        samtools view -f 0x4 -bu - | samtools fasta  > $OUT.unmapped.fasta
+     minimap2 -R '@RG\tID:$ID\tSM:$ID' -ax sr $REF1.mmi $QRY -t $P --eqx 2>$OUT.log |\
+       samtools view -f 0x4 -bu - | samtools fasta | \
+       minimap2 -R '@RG\tID:$ID\tSM:$ID' -ax sr $REF2.mmi /dev/stdin -t $P --eqx 2>>$OUT.log |\
+       samtools view -f 0x4 -bu - | samtools fasta > $OUT.unmapped.fasta
   fi
 elif [ "$#" -eq 4 ] ; then
   export ID=$1
@@ -52,9 +51,10 @@ elif [ "$#" -eq 4 ] ; then
   mkdir -p `dirname $OUT`
 
   if [ ! -f $OUT.unmapped_1.fasta ] ; then
-    bowtie2 --very-sensitive $BOWTIE2FLAGS -1 $QRY1 -2 $QRY2 -x $REF1 -p $P --rg "ID:$ID" --rg "SM:$ID" --rg-id $ID 2>$OUT.log | \
+    touch $OUT
+    minimap2 -R '@RG\tID:$ID\tSM:$ID' -ax sr $REF1.mmi $QRY1 $QRY2 -t $P --eqx 2>$OUT.log |\
        samtools view -f 0xC -bu - | samtools fasta | \
-       bowtie2 --very-sensitive $BOWTIE2FLAGS --interleaved /dev/stdin -x $REF2 -p $P --rg "ID:$ID" --rg "SM:$ID" --rg-id $ID 2>>$OUT.log | \
+       minimap2 -R '@RG\tID:$ID\tSM:$ID' -ax sr $REF2.mmi /dev/stdin -t $P --eqx 2>>$OUT.log |\
        samtools view -f 0xC -bu - | samtools fasta -1 $OUT.unmapped_1.fasta -2 $OUT.unmapped_2.fasta
   fi
 fi
