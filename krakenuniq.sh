@@ -52,7 +52,33 @@ elif [ "$#" -eq 4 ] ; then
   fi
 fi
 
-if [ ! -s $OUT.bracken ] ; then
-  bracken -d $BRAKENDB -i $OUT.kreport -o $OUT.bracken -l P -t $P -w $OUT.breport
-  cat $OUT.bracken | sed 's| |__|g' | tee >(head -n 1) >(tail -n +2|sort -k7,7nr) >/dev/null| sed 's|__| |g' | cat > $OUT.bracken.srt ; mv $OUT.bracken.srt $OUT.bracken
+#if [ ! -s $OUT.bracken ] ; then
+#  bracken -d $BRAKENDB -i $OUT.kreport -o $OUT.bracken -l P -t $P -w $OUT.breport
+#  cat $OUT.bracken | sed 's| |__|g' | tee >(head -n 1) >(tail -n +2|sort -k7,7nr) >/dev/null| sed 's|__| |g' | cat > $OUT.bracken.srt ; mv $OUT.bracken.srt $OUT.bracken
+#fi
+
+
+if [ ! -s $OUT.species.bracken ] ; then
+  bracken -d $BRAKENDB -i $OUT.kreport -o $OUT.species.bracken -l S -t $P -w $OUT.species.breport
+  cat $OUT.species.bracken | sed 's| |__|g' | tee >(head -n 1) >(tail -n +2|sort -k7,7nr) >/dev/null| sed 's|__| |g' | cat > $OUT.species.bracken.srt ; mv $OUT.species.bracken.srt $OUT.species.bracken
+
+#  alpha_diversity.py -f $OUT.species.bracken  -a Sh > $OUT.alpha_diversity
+#  kreport2krona.py -r $OUT.species.breport -o $OUT.krona.txt --no-intermediate-ranks
+#  ktImportText $OUT.krona.txt -o $OUT.krona.html
 fi
+
+#############################################################
+
+if [ ! -s $OUT.phylums.bracken ] ; then
+  bracken -d $BRAKENDB -i $OUT.kreport -o $OUT.phylums.bracken -l P -t $P -w $OUT.phylums.breport
+  cat $OUT.phylums.bracken | sed 's| |__|g' | tee >(head -n 1) >(tail -n +2|sort -k7,7nr) >/dev/null| sed 's|__| |g' | cat > $OUT.phylums.bracken.srt
+
+  mv  $OUT.phylums.bracken.srt $OUT.phylums.bracken
+fi
+
+#if [ ! -s $OUT.domains.bracken ] ; then
+  bracken -d $BRAKENDB -i $OUT.kreport -o $OUT.domains.bracken -l D -t $P -w $OUT.domains.breport
+  cat $OUT.domains.bracken | sed 's| |__|g' | tee >(head -n 1) >(tail -n +2|sort -k7,7nr) >/dev/null| sed 's|__| |g' | cat > $OUT.domains.bracken.srt
+  mv  $OUT.domains.bracken.srt $OUT.domains.bracken
+#fi
+
