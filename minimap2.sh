@@ -34,10 +34,10 @@ if [ "$#" -eq 3 ] ; then
   mkdir -p `dirname $OUT`
 
   if [ ! -f $OUT.unmapped.fasta ] ; then
-     minimap2 -R '@RG\tID:$ID\tSM:$ID' -ax sr $REF1 $QRY -t $P --eqx 2>$OUT.log |\
+     minimap2 -R '@RG\tID:$ID\tSM:$ID' -ax sr $REF1 $QRY -t $P |\
        samtools view -f 0x4 -bu - | samtools fasta | \
-       minimap2 -R '@RG\tID:$ID\tSM:$ID' -ax sr $REF2 /dev/stdin -t $P --eqx 2>>$OUT.log |\
-       samtools view -f 0x4 -bu - | samtools fasta > $OUT.unmapped.fasta
+       minimap2 -R '@RG\tID:$ID\tSM:$ID' -ax sr $REF2 /dev/stdin -t $P  |\
+       samtools view -f 0x4 -bu - | samtools fasta | gzip -c -@ $P > $OUT.unmapped.fasta.gz
   fi
 elif [ "$#" -eq 4 ] ; then
   export ID=$1
@@ -50,9 +50,9 @@ elif [ "$#" -eq 4 ] ; then
 
   if [ ! -f $OUT.unmapped_1.fasta ] ; then
     touch $OUT
-    minimap2 -R '@RG\tID:$ID\tSM:$ID' -ax sr $REF1 $QRY1 $QRY2 -t $P --eqx 2>$OUT.log |\
+    minimap2 -R '@RG\tID:$ID\tSM:$ID' -ax sr $REF1 $QRY1 $QRY2 -t $P  |\
        samtools view -f 0xC -bu - | samtools fasta | \
-       minimap2 -R '@RG\tID:$ID\tSM:$ID' -ax sr $REF2 /dev/stdin -t $P --eqx 2>>$OUT.log |\
-       samtools view -f 0xC -bu - | samtools fasta -1 $OUT.unmapped_1.fasta -2 $OUT.unmapped_2.fasta
+       minimap2 -R '@RG\tID:$ID\tSM:$ID' -ax sr $REF2 /dev/stdin -t $P  |\
+       samtools view -f 0xC -bu - | samtools fasta -1 $OUT.unmapped_1.fasta.gz -2 $OUT.unmapped_2.fasta.gz -@ $P
   fi
 fi

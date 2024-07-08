@@ -29,6 +29,8 @@ test -s $REF1.1.bt2
 test -s $REF2.1.bt2
 test -n $P
 
+BOWTIE2FLAGS="-f --reorder"
+
 if [ "$#" -eq 3 ] ; then
   export ID=$1
   QRY=$2
