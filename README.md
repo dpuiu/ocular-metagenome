@@ -36,26 +36,27 @@
 
 ## Single sample using minimap2 ##
 
-    # unmated vs mated
+    # unmated
+    ls $QRY_SEQ_FILE
     minimap2.sh $SAMPLE_ID $QRY_SEQ_FILE  $OUT_PREFIX
+    ls $OUT_PREFIX.*
+
+    #mated
+    ls $QRY_SEQ_FILE1 $QRY_SEQ_FILE2
     minimap2.sh $SAMPLE_ID $QRY_SEQ_FILE1 $QRY_SEQ_FILE2 $OUT_PREFIX
+    ls $OUT_PREFIX.*
 
 ## Single sample using bowtie2 ##
 
-    # unmated
-    ls $QRY_SEQ_FILE
+    # unmated vs mated
     bowtie2.sh $SAMPLE_ID $QRY_SEQ_FILE  $OUT_PREFIX
-    ls $OUT_PREFIX.*
-
-    # mated
-    ls $QRY_SEQ_FILE1 $QRY_SEQ_FILE2
     bowtie2.sh $SAMPLE_ID $QRY_SEQ_FILE1 $QRY_SEQ_FILE2 $OUT_PREFIX
-    ls $OUT_PREFIX.*
 
 ## Multiple samples using minimap2 ## 
 
     # input: METADATA file; sample names must be in 1st column
     META=metadata.{tab,csv,tsv}  
+    head $META  
 
     # input:   FASTA/FASTQ[.gz] file(s)
     ls fastq/
