@@ -30,9 +30,9 @@
     
 # Align reads to the human reference genome #
 
-   # input:   REF1,REF2 FASTA indexed
-   # input:   sample FASTA/FASTQ[.gz] file(s)
-   # output:  sample unmapped FASTA.gz file
+    # input:   REF1,REF2 FASTA indexed
+    # input:   sample FASTA/FASTQ[.gz] file(s)
+    # output:  sample unmapped FASTA.gz file
 
 ## Single sample using minimap2 ##
 
