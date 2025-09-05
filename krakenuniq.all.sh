@@ -1,4 +1,4 @@
-#!/bin/bash -eux
+#!/bin/bash -eu
 
 ##################################################################
 
@@ -7,21 +7,17 @@ cat << EOF
    SCRIPT WHICH RUNS `basename $0 .sh`
 
    ARGUMENTS:
-    PRJ           : BioProject id
+    META           : metadata file
 
   SETUP ENVIRONMENT (once)
     . ./init.sh
 
   USAGE:
-    $0 ID 
+    $0 ID.txt
 EOF
 exit 0
 fi
 
 ##################################################################
-
-export PRJ=$1
-
-test -s ../../metadata/$PRJ.txt
-cat  ../../metadata/$PRJ.txt | sed 's|,|\t|' | cut -f1 | tail -n +2 | perl -ane 'print "krakenuniq.sh $F[0] ../../$ENV{PRJ}/minimap2/$F[0].unmapped"."_?.fasta $F[0]\n";' 
-echo "grep 'Homo sapiens' *species.bracken |  perl -ane '/(.+?).species.+\t(\d+)\t(\d\.\d+)$/; print \"\$1\t\$2\t\$3\n\";'  > count.Homo_sapients.tab"
+test -s $1
+cat  $1 | sed 's|,|\t|' | cut -f1 | tail -n +2 | perl -ane 'print "krakenuniq.sh $F[0] $ENV{ALIGNER}/$F[0].unmapped"."_?.fasta.gz $ENV{ALIGNER}/$F[0].unmapped\n";' 

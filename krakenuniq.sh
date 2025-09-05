@@ -24,9 +24,15 @@ fi
 
 ##################################################################
 
+which krakenuniq
+which bracken
+which seqkit
+
 test -d $KRAKENDB
 test -d $BRAKENDB
 test -n $P
+
+##################################################################
 
 if [ "$#" -eq 3 ] ; then
   export ID=$1
@@ -52,33 +58,34 @@ elif [ "$#" -eq 4 ] ; then
   fi
 fi
 
-#if [ ! -s $OUT.bracken ] ; then
-#  bracken -d $BRAKENDB -i $OUT.kreport -o $OUT.bracken -l P -t $P -w $OUT.breport
-#  cat $OUT.bracken | sed 's| |__|g' | tee >(head -n 1) >(tail -n +2|sort -k7,7nr) >/dev/null| sed 's|__| |g' | cat > $OUT.bracken.srt ; mv $OUT.bracken.srt $OUT.bracken
-#fi
-
-
-if [ ! -s $OUT.species.bracken ] ; then
-  bracken -d $BRAKENDB -i $OUT.kreport -o $OUT.species.bracken -l S -t $P -w $OUT.species.breport
-  cat $OUT.species.bracken | sed 's| |__|g' | tee >(head -n 1) >(tail -n +2|sort -k7,7nr) >/dev/null| sed 's|__| |g' | cat > $OUT.species.bracken.srt ; mv $OUT.species.bracken.srt $OUT.species.bracken
-
-#  alpha_diversity.py -f $OUT.species.bracken  -a Sh > $OUT.alpha_diversity
-#  kreport2krona.py -r $OUT.species.breport -o $OUT.krona.txt --no-intermediate-ranks
-#  ktImportText $OUT.krona.txt -o $OUT.krona.html
+###################################################################################
+#get Human reads
+if [ ! -s $OUT.filtered.kreport ] ; then
+  cat $OUT.kraken | perl -ane 'print if($F[2]==9606);'   | cut -f2 | tee $OUT.Homo_sapiens.ids | wc -l >  $OUT.Homo_sapiens.count
+  cat $OUT.kraken | perl -ane 'print if($F[2] ne 9606);' > $OUT.filtered.kraken
+  krakenuniq-report --db $KRAKENDB $OUT.filtered.kraken  > $OUT.filtered.kreport
 fi
 
-#############################################################
-
-if [ ! -s $OUT.phylums.bracken ] ; then
-  bracken -d $BRAKENDB -i $OUT.kreport -o $OUT.phylums.bracken -l P -t $P -w $OUT.phylums.breport
-  cat $OUT.phylums.bracken | sed 's| |__|g' | tee >(head -n 1) >(tail -n +2|sort -k7,7nr) >/dev/null| sed 's|__| |g' | cat > $OUT.phylums.bracken.srt
-
-  mv  $OUT.phylums.bracken.srt $OUT.phylums.bracken
+if [ ! -s $OUT.filtered.bracken ] ; then
+  bracken -d $BRAKENDB -i $OUT.filtered.kreport -o $OUT.filtered.bracken -t $P -w $OUT.filtered.breport
 fi
 
-#if [ ! -s $OUT.domains.bracken ] ; then
-  bracken -d $BRAKENDB -i $OUT.kreport -o $OUT.domains.bracken -l D -t $P -w $OUT.domains.breport
-  cat $OUT.domains.bracken | sed 's| |__|g' | tee >(head -n 1) >(tail -n +2|sort -k7,7nr) >/dev/null| sed 's|__| |g' | cat > $OUT.domains.bracken.srt
-  mv  $OUT.domains.bracken.srt $OUT.domains.bracken
-#fi
+
+###################################################################################
+#Remove Human reads
+if [ -s $OUT.Homo_sapiens.ids ] ; then
+  if [ "$#" -eq 3 ] ; then
+    seqkit grep -v -f $OUT.Homo_sapiens.ids $QRY -o $OUT.filtered.fasta.gz
+  elif [ "$#" -eq 4 ] ; then
+    seqkit grep -v -f $OUT.Homo_sapiens.ids $QRY1 -o $OUT.filtered_1.fasta.gz
+    seqkit grep -v -f $OUT.Homo_sapiens.ids $QRY2 -o $OUT.filtered_2.fasta.gz
+  fi
+else
+  if [ "$#" -eq 3 ] ; then
+    ln -s $OUT.filtered.fasta.gz $QRY
+  elif [ "$#" -eq 4 ] ; then
+    ln -s $OUT.filtered_1.fasta.gz  $QRY1
+    ln -s $OUT.filtered_2.fasta.gz  $QRY2
+  fi
+fi
 

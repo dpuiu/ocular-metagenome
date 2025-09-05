@@ -23,13 +23,11 @@ fi
 
 ##################################################################
 
-test -n $REF1
-test -n $REF2
 test -s $REF1.1.bt2
 test -s $REF2.1.bt2
 test -n $P
 
-BOWTIE2FLAGS="-f --reorder"
+BOWTIE2FLAGS="--very-sensitive --reorder"  # -f for input FASTA reads
 
 if [ "$#" -eq 3 ] ; then
   export ID=$1
@@ -38,11 +36,11 @@ if [ "$#" -eq 3 ] ; then
   test -s $QRY
   mkdir -p `dirname $OUT`
 
-  if [ ! -f $OUT.unmapped.fasta ] ; then
-      bowtie2 --very-sensitive $BOWTIE2FLAGS $QRY -x $REF1 -p $P --rg "ID:$ID" --rg "SM:$ID" --rg-id $ID 2>$OUT.log | \
-        samtools view -f 0x4 -bu - | samtools fasta | \
-        bowtie2 --very-sensitive $BOWTIE2FLAGS /dev/stdin -x $REF2 -p $P --rg "ID:$ID" --rg "SM:$ID" --rg-id $ID  2>>$OUT.log | \
-        samtools view -f 0x4 -bu - | samtools fasta  > $OUT.unmapped.fasta
+  if [ ! -s $OUT.unmapped.fasta.gz ] ; then
+      bowtie2 $BOWTIE2FLAGS $QRY -x $REF1 -p $P --rg "ID:$ID" --rg "SM:$ID" --rg-id $ID 2>$OUT.log | \
+        samtools view -f 0x4 -bu - | samtools fastq | \
+        bowtie2 $BOWTIE2FLAGS /dev/stdin -x $REF2 -p $P --rg "ID:$ID" --rg "SM:$ID" --rg-id $ID  2>>$OUT.log | \
+        samtools view -f 0x4 -bu - | samtools fasta -o $OUT.unmapped.fasta.gz -@ $P
   fi
 elif [ "$#" -eq 4 ] ; then
   export ID=$1
@@ -53,10 +51,13 @@ elif [ "$#" -eq 4 ] ; then
   test -s $QRY2
   mkdir -p `dirname $OUT`
 
-  if [ ! -f $OUT.unmapped_1.fasta ] ; then
-    bowtie2 --very-sensitive $BOWTIE2FLAGS -1 $QRY1 -2 $QRY2 -x $REF1 -p $P --rg "ID:$ID" --rg "SM:$ID" --rg-id $ID 2>$OUT.log | \
-       samtools view -f 0xC -bu - | samtools fasta | \
-       bowtie2 --very-sensitive $BOWTIE2FLAGS --interleaved /dev/stdin -x $REF2 -p $P --rg "ID:$ID" --rg "SM:$ID" --rg-id $ID 2>>$OUT.log | \
-       samtools view -f 0xC -bu - | samtools fasta -1 $OUT.unmapped_1.fasta -2 $OUT.unmapped_2.fasta
+  if [ ! -s $OUT.unmapped_1.fasta.gz ] && [ ! -s $OUT.unmapped_2.fasta.gz ] ; then
+    bowtie2 $BOWTIE2FLAGS -1 $QRY1 -2 $QRY2 -x $REF1 -p $P --rg "ID:$ID" --rg "SM:$ID" --rg-id $ID 2>$OUT.log | \
+       samtools view -f 0xC -bu - | samtools fastq | \
+       bowtie2 $BOWTIE2FLAGS --interleaved /dev/stdin -x $REF2 -p $P --rg "ID:$ID" --rg "SM:$ID" --rg-id $ID 2>>$OUT.log | \
+       samtools view -f 0xC -bu - | samtools fasta -1 $OUT.unmapped_1.fasta.gz -2 $OUT.unmapped_2.fasta.gz
   fi
 fi
+
+#zcat $OUT.unmapped_?.fasta.gz | grep ">" | sed 's|^>||'| sort -u > $OUT.unmapped.ids
+#zgrep -c "^>" $OUT.unmapped*.fasta.gz > $OUT.unmapped.count
